@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Laporan Skor Pertandingan Badminton</title>
+    <!-- SDK Firebase CDN (Compat Version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -28,6 +32,17 @@
         h2, h3 {
             color: #333;
             margin-top: 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            margin-left: 10px;
+            background-color: #28a745;
+            color: white;
+            font-weight: normal;
         }
 
         .control-panel {
@@ -196,7 +211,7 @@
 
 <div class="container">
     <div class="no-print">
-        <h2>Aplikasi Laporan Skor Pertandingan</h2>
+        <h2>Aplikasi Laporan Skor Pertandingan <span class="status-badge" id="syncStatus">🔄 Terhubung ke Cloud</span></h2>
         
         <!-- Panel Kontrol -->
         <div class="control-panel">
@@ -297,50 +312,84 @@
 </div>
 
 <script>
-    let players = JSON.parse(localStorage.getItem('app_players')) || ['Abu', 'Dina', 'Aloy', 'Regina', 'Yuka', 'Nico', 'Bravy', 'Arap'];
-    let matches = JSON.parse(localStorage.getItem('app_matches')) || [];
+    // =========================================================================
+    // ⚠️ GANTI KODE DI BAWAH INI DENGAN KODE FIREBASECONFIG MILIK ANDA ⚠️
+    // =========================================================================
+    const firebaseConfig = {
+  apiKey: "AIzaSyBpHf7JK-Ryf-tfs9kDVWlAQBo-XPgzO9M",
+  authDomain: "badminton-1bd18.firebaseapp.com",
+  databaseURL: "https://badminton-1bd18-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "badminton-1bd18",
+  storageBucket: "badminton-1bd18.firebasestorage.app",
+  messagingSenderId: "780677719942",
+  appId: "1:780677719942:web:66fc8149d38b4c97916e07",
+  measurementId: "G-QHYLSF1QHY"
+};
+
+    // Inisialisasi Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let players = [];
+    let matches = [];
     let editingMatchId = null;
 
-    // Set Default Tanggal
+    // Set Default Tanggal Hari Ini
     const dateInput = document.getElementById('matchDate');
-    const savedDate = localStorage.getItem('app_date');
-    if (savedDate) {
-        dateInput.value = savedDate;
-    } else {
-        dateInput.valueAsDate = new Date();
-        saveDate();
-    }
+    dateInput.valueAsDate = new Date();
+
+    // -------------------------------------------------------------------------
+    // REALTIME LISTENERS (Mendengar Perubahan Data dari Cloud secara Otomatis)
+    // -------------------------------------------------------------------------
+    
+    // Listen Data Pemain
+    db.ref('players').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            players = data;
+        } else {
+            // Default awal jika database masih kosong
+            players = ['Abu', 'Dina', 'Aloy', 'Regina', 'Yuka', 'Nico', 'Bravy', 'Arap'];
+            db.ref('players').set(players);
+        }
+        renderPlayers();
+        renderSummary();
+    });
+
+    // Listen Data Pertandingan
+    db.ref('matches').on('value', (snapshot) => {
+        const data = snapshot.val();
+        matches = [];
+        if (data) {
+            Object.keys(data).forEach(key => {
+                matches.push(data[key]);
+            });
+        }
+        renderMatches();
+        renderSummary();
+    });
+
+    // -------------------------------------------------------------------------
+    // FUNGSI-FUNGSI LOGIKA APLIKASI
+    // -------------------------------------------------------------------------
 
     function onDateChange() {
-        saveDate();
         if (editingMatchId !== null) cancelEdit();
         renderMatches();
         renderSummary();
     }
 
-    function saveDate() {
-        localStorage.setItem('app_date', dateInput.value);
+    function savePlayersToCloud() {
+        db.ref('players').set(players);
     }
 
-    function savePlayers() {
-        localStorage.setItem('app_players', JSON.stringify(players));
-        renderPlayers();
-    }
-
-    function saveMatches() {
-        localStorage.setItem('app_matches', JSON.stringify(matches));
-        renderMatches();
-        renderSummary();
-    }
-
-    // Kelola Pemain
     function addPlayer() {
         const input = document.getElementById('newPlayer');
         const name = input.value.trim();
         if (name && !players.includes(name)) {
             players.push(name);
             input.value = '';
-            savePlayers();
+            savePlayersToCloud();
         } else if (players.includes(name)) {
             alert('Nama pemain sudah ada!');
         }
@@ -349,7 +398,7 @@
     function removePlayer(index) {
         if (confirm(`Hapus pemain "${players[index]}"?`)) {
             players.splice(index, 1);
-            savePlayers();
+            savePlayersToCloud();
         }
     }
 
@@ -368,7 +417,6 @@
         updatePlayerDropdownOptions();
     }
 
-    // Filter Dinamis Dropdown Pemain
     function updatePlayerDropdownOptions() {
         const selectsConfig = [
             { id: 'teamA1', req: true },
@@ -400,7 +448,6 @@
         });
     }
 
-    // Kelola Pertandingan (Menyimpan sesuai tanggal terpilih)
     function saveOrUpdateMatch() {
         const currentDate = dateInput.value;
         if (!currentDate) {
@@ -427,7 +474,6 @@
             return;
         }
 
-        // Pengecekan Skor Validasi
         const scoreA = parseInt(valA, 10);
         const scoreB = parseInt(valB, 10);
 
@@ -447,23 +493,25 @@
         }
 
         if (editingMatchId !== null) {
-            const index = matches.findIndex(m => m.id === editingMatchId);
-            if (index !== -1) {
-                matches[index] = { ...matches[index], p1, p2, p3, p4, scoreA, scoreB };
-            }
-            cancelEdit();
-        } else {
-            const newMatch = {
-                id: Date.now(),
+            // Update match di Firebase Cloud
+            db.ref('matches/' + editingMatchId).set({
+                id: editingMatchId,
                 date: currentDate,
                 p1, p2, p3, p4,
                 scoreA, scoreB
-            };
-            matches.push(newMatch);
+            });
+            cancelEdit();
+        } else {
+            // Tambah match baru di Firebase Cloud
+            const newMatchId = Date.now();
+            db.ref('matches/' + newMatchId).set({
+                id: newMatchId,
+                date: currentDate,
+                p1, p2, p3, p4,
+                scoreA, scoreB
+            });
             resetMatchForm();
         }
-
-        saveMatches();
     }
 
     function editMatch(id) {
@@ -515,13 +563,11 @@
 
     function deleteMatch(id) {
         if (confirm('Apakah Anda yakin ingin menghapus pertandingan ini?')) {
-            matches = matches.filter(m => m.id !== id);
+            db.ref('matches/' + id).remove();
             if (editingMatchId === id) cancelEdit();
-            saveMatches();
         }
     }
 
-    // Tampilkan pertandingan berdasarkan TANGGAL yang sedang dipilih
     function renderMatches() {
         const tbody = document.getElementById('matchTableBody');
         tbody.innerHTML = '';
@@ -554,7 +600,6 @@
         });
     }
 
-    // Tampilkan rekapitulasi bermain khusus pada TANGGAL terpilih
     function renderSummary() {
         const tbody = document.getElementById('summaryTableBody');
         tbody.innerHTML = '';
@@ -586,11 +631,6 @@
             `;
         });
     }
-
-    // Initial Load
-    renderPlayers();
-    renderMatches();
-    renderSummary();
 </script>
 
 </body>
