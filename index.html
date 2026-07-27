@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Laporan Skor Pertandingan Badminton</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2, h3 {
+            color: #333;
+            margin-top: 0;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 25px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        @media (max-width: 768px) {
+            .control-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .btn-action {
+            width: auto !important;
+            padding: 5px 10px;
+            font-size: 12px;
+            margin: 0 2px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .player-list-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            background: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag span {
+            cursor: pointer;
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        /* Styling Tabel Excel */
+        .excel-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 25px;
+            background: white;
+            table-layout: auto;
+        }
+
+        .excel-table th, .excel-table td {
+            border: 1.5px solid #000000;
+            padding: 6px 8px;
+            text-align: center;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .header-date {
+            background-color: #b4c6e7;
+            font-weight: bold;
+            width: 120px;
+        }
+
+        .header-yellow {
+            background-color: #ffc000;
+            font-weight: bold;
+        }
+
+        .header-green {
+            background-color: #00b050;
+            color: white;
+            font-weight: bold;
+        }
+
+        .date-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .action-cell {
+            white-space: nowrap;
+            width: 130px;
+            min-width: 130px;
+        }
+
+        .no-print {
+            display: block;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="no-print">
+        <h2>Aplikasi Laporan Skor Pertandingan</h2>
+        
+        <!-- Panel Kontrol -->
+        <div class="control-panel">
+            <!-- Form Master Pemain -->
+            <div>
+                <h3>1. Master Pemain</h3>
+                <div class="form-group">
+                    <label for="newPlayer">Nama Pemain Baru:</label>
+                    <input type="text" id="newPlayer" placeholder="Contoh: Budi">
+                </div>
+                <button onclick="addPlayer()">Simpan Pemain</button>
+                <div class="player-list-tags" id="playerTags"></div>
+            </div>
+
+            <!-- Form Input Pertandingan -->
+            <div>
+                <h3 id="formTitle">2. Tambah Pertandingan</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>Tim A - Pemain 1 (*):</label>
+                        <select id="teamA1" onchange="updatePlayerDropdownOptions()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tim A - Pemain 2 (Opsional):</label>
+                        <select id="teamA2" onchange="updatePlayerDropdownOptions()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tim B - Pemain 1 (*):</label>
+                        <select id="teamB1" onchange="updatePlayerDropdownOptions()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tim B - Pemain 2 (Opsional):</label>
+                        <select id="teamB2" onchange="updatePlayerDropdownOptions()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Skor Tim A:</label>
+                        <input type="number" id="scoreA" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Skor Tim B:</label>
+                        <input type="number" id="scoreB" value="0" min="0">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <button id="btnSubmitMatch" onclick="saveOrUpdateMatch()" style="background-color: #28a745;">Tambah Pertandingan</button>
+                    <button id="btnCancelEdit" onclick="cancelEdit()" class="btn-secondary" style="display: none; width: 120px;">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAMPILAN LAPORAN HASIL -->
+    <hr class="no-print" style="margin: 20px 0;">
+
+    <div class="date-box">
+        <table class="excel-table" style="width: auto; margin: 0;">
+            <tr>
+                <td class="header-date">Tanggal</td>
+                <td style="min-width: 200px;">
+                    <input type="date" id="matchDate" onchange="onDateChange()" style="border:none; background:transparent; font-weight:bold; font-size:14px; text-align:center;">
+                </td>
+            </tr>
+        </table>
+        <button onclick="window.print()" class="no-print" style="width: auto; padding: 6px 15px; background: #6c757d;">Cetak / Save PDF</button>
+    </div>
+
+    <!-- Tabel Pertandingan Utama -->
+    <table class="excel-table">
+        <thead>
+            <tr>
+                <th class="header-yellow" style="width: 10%;">Pertandingan</th>
+                <th class="header-yellow" colspan="2">Pemain</th>
+                <th class="header-yellow" style="width: 8%;">Versus</th>
+                <th class="header-yellow" colspan="2">Pemain</th>
+                <th class="header-yellow" colspan="2" style="width: 12%;">Skor</th>
+                <th class="header-yellow action-cell no-print">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="matchTableBody">
+            <!-- Data Pertandingan Masuk di Sini -->
+        </tbody>
+    </table>
+
+    <!-- Tabel Rekap Jumlah Bermain -->
+    <div style="width: 320px;">
+        <table class="excel-table">
+            <thead>
+                <tr>
+                    <th class="header-green" style="width: 60%;">Pemain</th>
+                    <th class="header-green" style="width: 40%;">Jumlah Bermain</th>
+                </tr>
+            </thead>
+            <tbody id="summaryTableBody">
+                <!-- Data Rekap Masuk di Sini -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let players = JSON.parse(localStorage.getItem('app_players')) || ['Abu', 'Dina', 'Aloy', 'Regina', 'Yuka', 'Nico', 'Bravy', 'Arap'];
+    let matches = JSON.parse(localStorage.getItem('app_matches')) || [];
+    let editingMatchId = null;
+
+    // Set Default Tanggal
+    const dateInput = document.getElementById('matchDate');
+    const savedDate = localStorage.getItem('app_date');
+    if (savedDate) {
+        dateInput.value = savedDate;
+    } else {
+        dateInput.valueAsDate = new Date();
+        saveDate();
+    }
+
+    function onDateChange() {
+        saveDate();
+        if (editingMatchId !== null) cancelEdit();
+        renderMatches();
+        renderSummary();
+    }
+
+    function saveDate() {
+        localStorage.setItem('app_date', dateInput.value);
+    }
+
+    function savePlayers() {
+        localStorage.setItem('app_players', JSON.stringify(players));
+        renderPlayers();
+    }
+
+    function saveMatches() {
+        localStorage.setItem('app_matches', JSON.stringify(matches));
+        renderMatches();
+        renderSummary();
+    }
+
+    // Kelola Pemain
+    function addPlayer() {
+        const input = document.getElementById('newPlayer');
+        const name = input.value.trim();
+        if (name && !players.includes(name)) {
+            players.push(name);
+            input.value = '';
+            savePlayers();
+        } else if (players.includes(name)) {
+            alert('Nama pemain sudah ada!');
+        }
+    }
+
+    function removePlayer(index) {
+        if (confirm(`Hapus pemain "${players[index]}"?`)) {
+            players.splice(index, 1);
+            savePlayers();
+        }
+    }
+
+    function renderPlayers() {
+        const tagsContainer = document.getElementById('playerTags');
+        tagsContainer.innerHTML = '';
+        players.forEach((p, idx) => {
+            tagsContainer.innerHTML += `
+                <div class="tag">
+                    ${p}
+                    <span onclick="removePlayer(${idx})">&times;</span>
+                </div>
+            `;
+        });
+
+        updatePlayerDropdownOptions();
+    }
+
+    // Filter Dinamis Dropdown Pemain
+    function updatePlayerDropdownOptions() {
+        const selectsConfig = [
+            { id: 'teamA1', req: true },
+            { id: 'teamA2', req: false },
+            { id: 'teamB1', req: true },
+            { id: 'teamB2', req: false }
+        ];
+
+        const currentSelections = selectsConfig.map(s => document.getElementById(s.id).value);
+
+        selectsConfig.forEach((sObj, idx) => {
+            const selectEl = document.getElementById(sObj.id);
+            const currentVal = selectEl.value;
+
+            const otherSelections = currentSelections.filter((val, i) => i !== idx && val !== '');
+
+            let html = sObj.req 
+                ? '<option value="">-- Pilih Pemain --</option>' 
+                : '<option value="">-- Kosong (Tunggal / 1vs1) --</option>';
+
+            players.forEach(p => {
+                if (!otherSelections.includes(p)) {
+                    html += `<option value="${p}">${p}</option>`;
+                }
+            });
+
+            selectEl.innerHTML = html;
+            selectEl.value = currentVal;
+        });
+    }
+
+    // Kelola Pertandingan (Menyimpan sesuai tanggal terpilih)
+    function saveOrUpdateMatch() {
+        const currentDate = dateInput.value;
+        if (!currentDate) {
+            alert('Harap pilih tanggal terlebih dahulu!');
+            return;
+        }
+
+        const p1 = document.getElementById('teamA1').value;
+        const p2 = document.getElementById('teamA2').value;
+        const p3 = document.getElementById('teamB1').value;
+        const p4 = document.getElementById('teamB2').value;
+        const valA = document.getElementById('scoreA').value;
+        const valB = document.getElementById('scoreB').value;
+
+        if (!p1 || !p3) {
+            alert('Harap pilih minimal 1 pemain utama (Pemain 1) di Tim A dan Tim B!');
+            return;
+        }
+
+        const selectedPlayers = [p1, p2, p3, p4].filter(p => p && p.trim() !== '');
+        const uniquePlayers = new Set(selectedPlayers);
+        if (selectedPlayers.length !== uniquePlayers.size) {
+            alert('Setiap pemain hanya dapat dipilih 1 kali dalam satu pertandingan!');
+            return;
+        }
+
+        // Pengecekan Skor Validasi
+        const scoreA = parseInt(valA, 10);
+        const scoreB = parseInt(valB, 10);
+
+        if (isNaN(scoreA) || isNaN(scoreB)) {
+            alert('Harap isi skor dengan angka yang valid!');
+            return;
+        }
+
+        if (scoreA < 0 || scoreB < 0) {
+            alert('Skor tidak boleh bernilai negatif!');
+            return;
+        }
+
+        if (scoreA === 0 && scoreB === 0) {
+            alert('Skor tidak boleh 0 - 0! Harap masukkan skor pertandingan yang sebenarnya.');
+            return;
+        }
+
+        if (editingMatchId !== null) {
+            const index = matches.findIndex(m => m.id === editingMatchId);
+            if (index !== -1) {
+                matches[index] = { ...matches[index], p1, p2, p3, p4, scoreA, scoreB };
+            }
+            cancelEdit();
+        } else {
+            const newMatch = {
+                id: Date.now(),
+                date: currentDate,
+                p1, p2, p3, p4,
+                scoreA, scoreB
+            };
+            matches.push(newMatch);
+            resetMatchForm();
+        }
+
+        saveMatches();
+    }
+
+    function editMatch(id) {
+        const match = matches.find(m => m.id === id);
+        if (!match) return;
+
+        editingMatchId = id;
+        
+        document.getElementById('teamA1').value = match.p1;
+        document.getElementById('teamA2').value = match.p2 || '';
+        document.getElementById('teamB1').value = match.p3;
+        document.getElementById('teamB2').value = match.p4 || '';
+        document.getElementById('scoreA').value = match.scoreA;
+        document.getElementById('scoreB').value = match.scoreB;
+
+        updatePlayerDropdownOptions();
+
+        document.getElementById('formTitle').innerText = '2. Edit Pertandingan';
+        const btnSubmit = document.getElementById('btnSubmitMatch');
+        btnSubmit.innerText = 'Simpan Perubahan';
+        btnSubmit.style.backgroundColor = '#ffc107';
+        btnSubmit.style.color = '#212529';
+        document.getElementById('btnCancelEdit').style.display = 'block';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+        editingMatchId = null;
+        resetMatchForm();
+
+        document.getElementById('formTitle').innerText = '2. Tambah Pertandingan';
+        const btnSubmit = document.getElementById('btnSubmitMatch');
+        btnSubmit.innerText = 'Tambah Pertandingan';
+        btnSubmit.style.backgroundColor = '#28a745';
+        btnSubmit.style.color = '#fff';
+        document.getElementById('btnCancelEdit').style.display = 'none';
+    }
+
+    function resetMatchForm() {
+        document.getElementById('teamA1').value = '';
+        document.getElementById('teamA2').value = '';
+        document.getElementById('teamB1').value = '';
+        document.getElementById('teamB2').value = '';
+        document.getElementById('scoreA').value = 0;
+        document.getElementById('scoreB').value = 0;
+        updatePlayerDropdownOptions();
+    }
+
+    function deleteMatch(id) {
+        if (confirm('Apakah Anda yakin ingin menghapus pertandingan ini?')) {
+            matches = matches.filter(m => m.id !== id);
+            if (editingMatchId === id) cancelEdit();
+            saveMatches();
+        }
+    }
+
+    // Tampilkan pertandingan berdasarkan TANGGAL yang sedang dipilih
+    function renderMatches() {
+        const tbody = document.getElementById('matchTableBody');
+        tbody.innerHTML = '';
+
+        const currentDate = dateInput.value;
+        const filteredMatches = matches.filter(m => m.date === currentDate);
+
+        if (filteredMatches.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#888; padding:15px;">Belum ada pertandingan pada tanggal ini (${currentDate})</td></tr>`;
+            return;
+        }
+
+        filteredMatches.forEach((m, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${m.p1}</td>
+                    <td>${m.p2 || ''}</td>
+                    <td>vs</td>
+                    <td>${m.p3}</td>
+                    <td>${m.p4 || ''}</td>
+                    <td>${m.scoreA}</td>
+                    <td>${m.scoreB}</td>
+                    <td class="no-print action-cell">
+                        <button class="btn-action btn-warning" onclick="editMatch(${m.id})">Ubah</button>
+                        <button class="btn-action btn-danger" onclick="deleteMatch(${m.id})">Hapus</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // Tampilkan rekapitulasi bermain khusus pada TANGGAL terpilih
+    function renderSummary() {
+        const tbody = document.getElementById('summaryTableBody');
+        tbody.innerHTML = '';
+
+        const currentDate = dateInput.value;
+        const filteredMatches = matches.filter(m => m.date === currentDate);
+
+        const counts = {};
+        players.forEach(p => counts[p] = 0);
+
+        filteredMatches.forEach(m => {
+            [m.p1, m.p2, m.p3, m.p4].forEach(p => {
+                if (p && p.trim() !== '') {
+                    if (counts[p] !== undefined) {
+                        counts[p]++;
+                    } else {
+                        counts[p] = 1;
+                    }
+                }
+            });
+        });
+
+        players.forEach(p => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${p}</td>
+                    <td>${counts[p] || 0}</td>
+                </tr>
+            `;
+        });
+    }
+
+    // Initial Load
+    renderPlayers();
+    renderMatches();
+    renderSummary();
+</script>
+
+</body>
+</html>
