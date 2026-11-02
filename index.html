@@ -103,20 +103,9 @@
             display: inline-block;
         }
 
-        .btn-warning {
-            background-color: #ffc107;
-            color: #212529;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
+        .btn-warning { background-color: #ffc107; color: #212529; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
 
         .player-list-tags {
             display: flex;
@@ -141,6 +130,57 @@
             font-weight: bold;
         }
 
+        /* --- STYLING TIM A DAN TIM B --- */
+        .team-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .team-box {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .team-a-box {
+            background-color: #dbeafe; /* Pastel Blue */
+            border: 1px solid #bfdbfe;
+        }
+        .team-b-box {
+            background-color: #fee2e2; /* Pastel Red */
+            border: 1px solid #fecaca;
+        }
+        
+        @media (max-width: 768px) {
+            .team-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- STYLING MODAL CUSTOM POP UP --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px 25px;
+            border-radius: 8px;
+            width: 320px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .modal-content h4 { margin-top: 0; margin-bottom: 10px; color: #dc3545; }
+        .modal-content p { font-size: 14px; margin-bottom: 20px; line-height: 1.4;}
+        .modal-input { margin-bottom: 15px; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; }
+        .modal-buttons button { width: auto; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold;}
+        .btn-modal-confirm { background-color: #dc3545; }
+        .btn-modal-cancel { background-color: #6c757d; }
+
         /* Styling Tabel Excel */
         .excel-table {
             border-collapse: collapse;
@@ -158,56 +198,36 @@
             vertical-align: middle;
         }
 
-        .header-date {
-            background-color: #b4c6e7;
-            font-weight: bold;
-            width: 120px;
-        }
-
-        .header-yellow {
-            background-color: #ffc000;
-            font-weight: bold;
-        }
-
-        .header-green {
-            background-color: #00b050;
-            color: white;
-            font-weight: bold;
-        }
-
-        .date-box {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .action-cell {
-            white-space: nowrap;
-            width: 130px;
-            min-width: 130px;
-        }
-
-        .no-print {
-            display: block;
-        }
+        .header-date { background-color: #b4c6e7; font-weight: bold; width: 120px; }
+        .header-yellow { background-color: #ffc000; font-weight: bold; }
+        .header-green { background-color: #00b050; color: white; font-weight: bold; }
+        .date-box { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .action-cell { white-space: nowrap; width: 130px; min-width: 130px; }
+        .no-print { display: block; }
 
         @media print {
-            .no-print {
-                display: none !important;
-            }
-            body {
-                background: white;
-                padding: 0;
-            }
-            .container {
-                box-shadow: none;
-                border: none;
-            }
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; border: none; }
         }
     </style>
 </head>
 <body>
+
+<!-- KONTEM MODAL CUSTOM UNTUK HAPUS PEMAIN -->
+<div id="customDeleteModal" class="modal-overlay">
+    <div class="modal-content">
+        <h4 id="modalTitle">Peringatan</h4>
+        <p id="modalMessage">Pesan peringatan</p>
+        <div id="modalInputContainer" class="modal-input" style="display: none;">
+            <input type="password" id="modalPassword" placeholder="Masukkan Password Hapus">
+        </div>
+        <div class="modal-buttons">
+            <button id="btnModalConfirm" class="btn-modal-confirm">Lanjut</button>
+            <button id="btnModalCancel" class="btn-modal-cancel" onclick="closeModal()">Batal</button>
+        </div>
+    </div>
+</div>
 
 <div class="container">
     <div class="no-print">
@@ -229,33 +249,43 @@
             <!-- Form Input Pertandingan -->
             <div>
                 <h3 id="formTitle">2. Tambah Pertandingan</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="form-group">
-                        <label>Tim A - Pemain 1 (*):</label>
-                        <select id="teamA1" onchange="updatePlayerDropdownOptions()"></select>
+                <div class="team-container">
+                    <!-- Bagian Tim A -->
+                    <div class="team-box team-a-box">
+                        <h4 style="margin-top: 0; margin-bottom: 10px; color: #1e3a8a;">Tim A</h4>
+                        <div class="form-group">
+                            <label>Pemain 1 (*):</label>
+                            <select id="teamA1" onchange="updatePlayerDropdownOptions()"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Pemain 2 (Opsional):</label>
+                            <select id="teamA2" onchange="updatePlayerDropdownOptions()"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Skor Tim A:</label>
+                            <input type="number" id="scoreA" value="0" min="0">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Tim A - Pemain 2 (Opsional):</label>
-                        <select id="teamA2" onchange="updatePlayerDropdownOptions()"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Tim B - Pemain 1 (*):</label>
-                        <select id="teamB1" onchange="updatePlayerDropdownOptions()"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Tim B - Pemain 2 (Opsional):</label>
-                        <select id="teamB2" onchange="updatePlayerDropdownOptions()"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Skor Tim A:</label>
-                        <input type="number" id="scoreA" value="0" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label>Skor Tim B:</label>
-                        <input type="number" id="scoreB" value="0" min="0">
+
+                    <!-- Bagian Tim B -->
+                    <div class="team-box team-b-box">
+                        <h4 style="margin-top: 0; margin-bottom: 10px; color: #991b1b;">Tim B</h4>
+                        <div class="form-group">
+                            <label>Pemain 1 (*):</label>
+                            <select id="teamB1" onchange="updatePlayerDropdownOptions()"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Pemain 2 (Opsional):</label>
+                            <select id="teamB2" onchange="updatePlayerDropdownOptions()"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Skor Tim B:</label>
+                            <input type="number" id="scoreB" value="0" min="0">
+                        </div>
                     </div>
                 </div>
-                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button id="btnSubmitMatch" onclick="saveOrUpdateMatch()" style="background-color: #28a745;">Tambah Pertandingan</button>
                     <button id="btnCancelEdit" onclick="cancelEdit()" class="btn-secondary" style="display: none; width: 120px;">Batal</button>
                 </div>
@@ -316,15 +346,15 @@
     // ⚠️ GANTI KODE DI BAWAH INI DENGAN KODE FIREBASECONFIG MILIK ANDA ⚠️
     // =========================================================================
     const firebaseConfig = {
-  apiKey: "AIzaSyBpHf7JK-Ryf-tfs9kDVWlAQBo-XPgzO9M",
-  authDomain: "badminton-1bd18.firebaseapp.com",
-  databaseURL: "https://badminton-1bd18-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "badminton-1bd18",
-  storageBucket: "badminton-1bd18.firebasestorage.app",
-  messagingSenderId: "780677719942",
-  appId: "1:780677719942:web:66fc8149d38b4c97916e07",
-  measurementId: "G-QHYLSF1QHY"
-};
+      apiKey: "AIzaSyBpHf7JK-Ryf-tfs9kDVWlAQBo-XPgzO9M",
+      authDomain: "badminton-1bd18.firebaseapp.com",
+      databaseURL: "https://badminton-1bd18-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "badminton-1bd18",
+      storageBucket: "badminton-1bd18.firebasestorage.app",
+      messagingSenderId: "780677719942",
+      appId: "1:780677719942:web:66fc8149d38b4c97916e07",
+      measurementId: "G-QHYLSF1QHY"
+    };
 
     // Inisialisasi Firebase
     firebase.initializeApp(firebaseConfig);
@@ -339,7 +369,7 @@
     dateInput.valueAsDate = new Date();
 
     // -------------------------------------------------------------------------
-    // REALTIME LISTENERS (Mendengar Perubahan Data dari Cloud secara Otomatis)
+    // REALTIME LISTENERS
     // -------------------------------------------------------------------------
     
     // Listen Data Pemain
@@ -348,7 +378,6 @@
         if (data) {
             players = data;
         } else {
-            // Default awal jika database masih kosong
             players = ['Abu', 'Dina', 'Aloy', 'Regina', 'Yuka', 'Nico', 'Bravy', 'Arap'];
             db.ref('players').set(players);
         }
@@ -368,6 +397,74 @@
         renderMatches();
         renderSummary();
     });
+
+    // -------------------------------------------------------------------------
+    // LOGIKA MODAL CUSTOM UNTUK HAPUS PEMAIN
+    // -------------------------------------------------------------------------
+    let deleteStep = 0;
+    let playerIndexToDelete = null;
+    const deletePassword = "admin"; // GANTI PASSWORD DI SINI
+
+    function removePlayer(index) {
+        playerIndexToDelete = index;
+        deleteStep = 1;
+        showDeleteModal();
+    }
+
+    function showDeleteModal() {
+        const modal = document.getElementById('customDeleteModal');
+        const title = document.getElementById('modalTitle');
+        const message = document.getElementById('modalMessage');
+        const inputContainer = document.getElementById('modalInputContainer');
+        const pwdInput = document.getElementById('modalPassword');
+        const btnConfirm = document.getElementById('btnModalConfirm');
+
+        modal.style.display = 'flex';
+        inputContainer.style.display = 'none';
+        pwdInput.value = '';
+
+        if (deleteStep === 1) {
+            title.innerText = "Peringatan 1!";
+            message.innerText = `Apakah Anda yakin ingin menghapus pemain "${players[playerIndexToDelete]}"?`;
+            btnConfirm.innerText = "Ya, Lanjut";
+            btnConfirm.onclick = () => { deleteStep = 2; showDeleteModal(); };
+        } else if (deleteStep === 2) {
+            title.innerText = "Peringatan 2!";
+            message.innerText = "Data pemain yang dihapus tidak bisa dikembalikan. Apakah Anda benar-benar yakin?";
+            btnConfirm.innerText = "Ya, Saya Yakin";
+            btnConfirm.onclick = () => { deleteStep = 3; showDeleteModal(); };
+        } else if (deleteStep === 3) {
+            title.innerText = "Otentikasi Keamanan";
+            message.innerText = "Masukkan password untuk menghapus pemain ini:";
+            inputContainer.style.display = 'block';
+            btnConfirm.innerText = "Hapus Permanen";
+            btnConfirm.onclick = confirmDeleteWithPassword;
+        }
+    }
+
+    function confirmDeleteWithPassword() {
+        const pwd = document.getElementById('modalPassword').value;
+        const message = document.getElementById('modalMessage');
+        
+        if (pwd === deletePassword) {
+            players.splice(playerIndexToDelete, 1);
+            savePlayersToCloud();
+            closeModal();
+        } else {
+            message.innerText = "Password salah! Silakan coba lagi.";
+            message.style.color = "red";
+            setTimeout(() => {
+                message.style.color = "black";
+                message.innerText = "Masukkan password untuk menghapus pemain ini:";
+            }, 2000);
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('customDeleteModal').style.display = 'none';
+        deleteStep = 0;
+        playerIndexToDelete = null;
+    }
 
     // -------------------------------------------------------------------------
     // FUNGSI-FUNGSI LOGIKA APLIKASI
@@ -395,13 +492,6 @@
         }
     }
 
-    function removePlayer(index) {
-        if (confirm(`Hapus pemain "${players[index]}"?`)) {
-            players.splice(index, 1);
-            savePlayersToCloud();
-        }
-    }
-
     function renderPlayers() {
         const tagsContainer = document.getElementById('playerTags');
         tagsContainer.innerHTML = '';
@@ -413,7 +503,6 @@
                 </div>
             `;
         });
-
         updatePlayerDropdownOptions();
     }
 
@@ -477,13 +566,8 @@
         const scoreA = parseInt(valA, 10);
         const scoreB = parseInt(valB, 10);
 
-        if (isNaN(scoreA) || isNaN(scoreB)) {
-            alert('Harap isi skor dengan angka yang valid!');
-            return;
-        }
-
-        if (scoreA < 0 || scoreB < 0) {
-            alert('Skor tidak boleh bernilai negatif!');
+        if (isNaN(scoreA) || isNaN(scoreB) || scoreA < 0 || scoreB < 0) {
+            alert('Harap isi skor dengan angka yang valid dan tidak negatif!');
             return;
         }
 
@@ -493,7 +577,6 @@
         }
 
         if (editingMatchId !== null) {
-            // Update match di Firebase Cloud
             db.ref('matches/' + editingMatchId).set({
                 id: editingMatchId,
                 date: currentDate,
@@ -502,7 +585,6 @@
             });
             cancelEdit();
         } else {
-            // Tambah match baru di Firebase Cloud
             const newMatchId = Date.now();
             db.ref('matches/' + newMatchId).set({
                 id: newMatchId,
