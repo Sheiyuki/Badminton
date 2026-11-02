@@ -45,21 +45,13 @@
             font-weight: normal;
         }
 
-        .control-panel {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
+        /* Menggantikan control-panel agar menjadi 1 kolom penuh */
+        .form-panel {
             margin-bottom: 25px;
             background: #f8f9fa;
             padding: 15px;
             border-radius: 6px;
             border: 1px solid #ddd;
-        }
-
-        @media (max-width: 768px) {
-            .control-panel {
-                grid-template-columns: 1fr;
-            }
         }
 
         .form-group {
@@ -214,7 +206,7 @@
 </head>
 <body>
 
-<!-- KONTEM MODAL CUSTOM UNTUK HAPUS PEMAIN -->
+<!-- KONTEN MODAL CUSTOM UNTUK HAPUS PEMAIN -->
 <div id="customDeleteModal" class="modal-overlay">
     <div class="modal-content">
         <h4 id="modalTitle">Peringatan</h4>
@@ -233,62 +225,48 @@
     <div class="no-print">
         <h2>Aplikasi Laporan Skor Pertandingan <span class="status-badge" id="syncStatus">🔄 Terhubung ke Cloud</span></h2>
         
-        <!-- Panel Kontrol -->
-        <div class="control-panel">
-            <!-- Form Master Pemain -->
-            <div>
-                <h3>1. Master Pemain</h3>
-                <div class="form-group">
-                    <label for="newPlayer">Nama Pemain Baru:</label>
-                    <input type="text" id="newPlayer" placeholder="Contoh: Budi">
+        <!-- Form Input Pertandingan -->
+        <div class="form-panel">
+            <h3 id="formTitle">Tambah Pertandingan</h3>
+            <div class="team-container">
+                <!-- Bagian Tim A -->
+                <div class="team-box team-a-box">
+                    <h4 style="margin-top: 0; margin-bottom: 10px; color: #1e3a8a;">Tim A</h4>
+                    <div class="form-group">
+                        <label>Pemain 1 (*):</label>
+                        <select id="teamA1" onchange="updatePlayerDropdownOptions()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pemain 2 (Opsional):</label>
+                        <select id="teamA2" onchange="updatePlayerDropdownOptions()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Skor Tim A:</label>
+                        <input type="number" id="scoreA" value="0" min="0">
+                    </div>
                 </div>
-                <button onclick="addPlayer()">Simpan Pemain</button>
-                <div class="player-list-tags" id="playerTags"></div>
+
+                <!-- Bagian Tim B -->
+                <div class="team-box team-b-box">
+                    <h4 style="margin-top: 0; margin-bottom: 10px; color: #991b1b;">Tim B</h4>
+                    <div class="form-group">
+                        <label>Pemain 1 (*):</label>
+                        <select id="teamB1" onchange="updatePlayerDropdownOptions()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pemain 2 (Opsional):</label>
+                        <select id="teamB2" onchange="updatePlayerDropdownOptions()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Skor Tim B:</label>
+                        <input type="number" id="scoreB" value="0" min="0">
+                    </div>
+                </div>
             </div>
-
-            <!-- Form Input Pertandingan -->
-            <div>
-                <h3 id="formTitle">2. Tambah Pertandingan</h3>
-                <div class="team-container">
-                    <!-- Bagian Tim A -->
-                    <div class="team-box team-a-box">
-                        <h4 style="margin-top: 0; margin-bottom: 10px; color: #1e3a8a;">Tim A</h4>
-                        <div class="form-group">
-                            <label>Pemain 1 (*):</label>
-                            <select id="teamA1" onchange="updatePlayerDropdownOptions()"></select>
-                        </div>
-                        <div class="form-group">
-                            <label>Pemain 2 (Opsional):</label>
-                            <select id="teamA2" onchange="updatePlayerDropdownOptions()"></select>
-                        </div>
-                        <div class="form-group">
-                            <label>Skor Tim A:</label>
-                            <input type="number" id="scoreA" value="0" min="0">
-                        </div>
-                    </div>
-
-                    <!-- Bagian Tim B -->
-                    <div class="team-box team-b-box">
-                        <h4 style="margin-top: 0; margin-bottom: 10px; color: #991b1b;">Tim B</h4>
-                        <div class="form-group">
-                            <label>Pemain 1 (*):</label>
-                            <select id="teamB1" onchange="updatePlayerDropdownOptions()"></select>
-                        </div>
-                        <div class="form-group">
-                            <label>Pemain 2 (Opsional):</label>
-                            <select id="teamB2" onchange="updatePlayerDropdownOptions()"></select>
-                        </div>
-                        <div class="form-group">
-                            <label>Skor Tim B:</label>
-                            <input type="number" id="scoreB" value="0" min="0">
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button id="btnSubmitMatch" onclick="saveOrUpdateMatch()" style="background-color: #28a745;">Tambah Pertandingan</button>
-                    <button id="btnCancelEdit" onclick="cancelEdit()" class="btn-secondary" style="display: none; width: 120px;">Batal</button>
-                </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button id="btnSubmitMatch" onclick="saveOrUpdateMatch()" style="background-color: #28a745;">Tambah Pertandingan</button>
+                <button id="btnCancelEdit" onclick="cancelEdit()" class="btn-secondary" style="display: none; width: 120px;">Batal</button>
             </div>
         </div>
     </div>
@@ -338,6 +316,18 @@
                 <!-- Data Rekap Masuk di Sini -->
             </tbody>
         </table>
+    </div>
+
+    <!-- Form Master Pemain Pindah ke Bawah -->
+    <hr class="no-print" style="margin: 30px 0;">
+    <div class="form-panel no-print">
+        <h3>Master Pemain</h3>
+        <div class="form-group" style="max-width: 320px;">
+            <label for="newPlayer">Nama Pemain Baru:</label>
+            <input type="text" id="newPlayer" placeholder="Contoh: Budi">
+        </div>
+        <button onclick="addPlayer()" style="max-width: 320px;">Simpan Pemain</button>
+        <div class="player-list-tags" id="playerTags"></div>
     </div>
 </div>
 
@@ -611,7 +601,7 @@
 
         updatePlayerDropdownOptions();
 
-        document.getElementById('formTitle').innerText = '2. Edit Pertandingan';
+        document.getElementById('formTitle').innerText = 'Edit Pertandingan';
         const btnSubmit = document.getElementById('btnSubmitMatch');
         btnSubmit.innerText = 'Simpan Perubahan';
         btnSubmit.style.backgroundColor = '#ffc107';
@@ -625,7 +615,7 @@
         editingMatchId = null;
         resetMatchForm();
 
-        document.getElementById('formTitle').innerText = '2. Tambah Pertandingan';
+        document.getElementById('formTitle').innerText = 'Tambah Pertandingan';
         const btnSubmit = document.getElementById('btnSubmitMatch');
         btnSubmit.innerText = 'Tambah Pertandingan';
         btnSubmit.style.backgroundColor = '#28a745';
